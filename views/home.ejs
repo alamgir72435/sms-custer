@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Send SMS</title>
+		<link
+			href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css"
+			rel="stylesheet"
+		/>
+	</head>
+	<body>
+		<div class="container">
+			<div class="row">
+				<div class="col-md-6 mx-auto mt-5">
+					<div class="card p-2">
+						<h4 class="text-center">Fastest SMS Delivery</h4>
+						<div class="msg"></div>
+						<form>
+							<div class="form-group">
+								<label for="phone">Phone</label>
+								<input value="01841801069" id="phone" class="form-control" />
+							</div>
+							<div class="form-group">
+								<label for="Body">Body</label>
+								<textarea
+									class="form-control"
+									id="body"
+									cols="30"
+									rows="3"
+								></textarea>
+							</div>
+							<button
+								id="send"
+								style="width: 100%"
+								class="btn btn-secondary mt-2"
+							>
+								Send
+							</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			document.querySelector("#send").addEventListener("click", (e) => {
+				e.preventDefault();
+				let number = document.querySelector("#phone").value;
+				let body = document.querySelector("#body").value;
+				let msg = document.querySelector(".msg");
+				if (number === "") {
+					msg.innerHTML = `<div class="alert alert-danger">Phone ?</div>`;
+				} else if (body === "") {
+					msg.innerHTML = `<div class="alert alert-danger">body ?</div>`;
+				} else {
+					let data = {
+						number,
+						body,
+					};
+					e.target.textContent = "Sending";
+					fetch("/send", {
+						method: "POST",
+						mode: "cors",
+						cache: "no-cache",
+						credentials: "same-origin",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify(data),
+					})
+						.then((res) => {
+							msg.innerHTML = `<div class="alert alert-success">Message Sent</div>`;
+							e.target.textContent = "Send";
+						})
+						.catch((err) => {
+							e.target.textContent = "Send";
+						});
+				}
+			});
+		</script>
+	</body>
+</html>
