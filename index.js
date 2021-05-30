@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
 const Pusher = require("pusher");
+const cors = require("cors");
 
 const port = process.env.PORT || 5000;
 const pusher = new Pusher({
@@ -18,6 +19,7 @@ app.use(express.json());
 app.get("/", (req, res) => {
 	res.render("home");
 });
+app.use(cors());
 
 const uri =
 	"mongodb+srv://admin:admin@cluster0.pnvh0.mongodb.net/sms-custer?retryWrites=true&w=majority";
