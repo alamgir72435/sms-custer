@@ -43,6 +43,8 @@
 		} else if (body === "") {
 			msg.innerHTML = `<div class="alert alert-danger">body ?</div>`;
 		} else {
+			document.querySelector("#phone").value = "";
+			document.querySelector("#body").value = "";
 			socket.emit("message", {
 				number,
 				body,
