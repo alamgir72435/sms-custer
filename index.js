@@ -26,11 +26,15 @@ const uri =
 	"mongodb+srv://admin:admin@cluster0.pnvh0.mongodb.net/sms-custer?retryWrites=true&w=majority";
 
 // mongoodb connection
-mongoose.connect(uri, {
-	useNewUrlParser: true,
-	useUnifiedTopology: true,
-	useFindAndModify: true,
-});
+mongoose
+	.connect(uri, {
+		useNewUrlParser: true,
+		useUnifiedTopology: true,
+		useFindAndModify: true,
+	})
+	.then((db) => {
+		console.log("Mongodb Connected");
+	});
 
 const messageSchema = mongoose.Schema({
 	number: {
@@ -79,6 +83,11 @@ app.get("/messages", async (req, res) => {
 	res.json(messages);
 });
 
+app.get("/message/all", async (req, res) => {
+	const messages = await Message.find();
+	res.json(messages);
+});
+
 app.get("/mark-as-sent/:id", async (req, res) => {
 	try {
 		const message = await Message.findOne({ _id: req.params.id });
@@ -99,13 +108,15 @@ app.get("/socket", (req, res) => {
 const server = app.listen(port, console.log("server running on port " + port));
 
 const io = socketio(server);
-const messages = [];
+var messages;
 
 io.on("connection", (socket) => {
 	console.log("Connected", socket.id);
 	socket.emit("all", messages);
-	socket.on("message", (message) => {
-		messages.push(message);
+	socket.on("message", async (message) => {
+		const { number, body } = message;
+		const mst = await new Message({ number, body }).save();
+		messages = mst;
 		socket.broadcast.emit("all", messages);
 		socket.emit("sender", messages);
 	});
