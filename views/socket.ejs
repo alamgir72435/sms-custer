@@ -33,7 +33,8 @@
 
 <script>
 	const socket = io();
-	document.getElementById("send").addEventListener("click", () => {
+	document.getElementById("send").addEventListener("click", (e) => {
+		e.preventDefault();
 		let number = document.querySelector("#phone").value;
 		let body = document.querySelector("#body").value;
 		let msg = document.querySelector(".msg");
