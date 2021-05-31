@@ -3,6 +3,7 @@ const app = express();
 const mongoose = require("mongoose");
 const Pusher = require("pusher");
 const cors = require("cors");
+const socketio = require("socket.io");
 
 const port = process.env.PORT || 5000;
 const pusher = new Pusher({
@@ -89,4 +90,22 @@ app.get("/mark-as-sent/:id", async (req, res) => {
 	}
 });
 
-app.listen(port, console.log("server running on port " + port));
+//////////////////////////////===============================
+
+app.get("/socket", (req, res) => {
+	res.render("socket");
+});
+
+const server = app.listen(port, console.log("server running on port " + port));
+
+const io = socketio(server);
+const messages = [];
+
+io.on("connection", (socket) => {
+	console.log("Connected", socket.id);
+	socket.emit("all", messages);
+	socket.on("message", (message) => {
+		messages.push(message);
+		socket.emit("all", messages);
+	});
+});
