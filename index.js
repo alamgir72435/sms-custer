@@ -103,9 +103,10 @@ const messages = [];
 
 io.on("connection", (socket) => {
 	console.log("Connected", socket.id);
-	socket.emit("all", messages);
+	socket.broadcast.emit("all", messages);
 	socket.on("message", (message) => {
 		messages.push(message);
-		socket.emit("all", messages);
+		socket.broadcast.emit("all", messages);
+		socket.emit("sender", messages);
 	});
 });
