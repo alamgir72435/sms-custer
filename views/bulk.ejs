@@ -1,0 +1,74 @@
+<%- include('./partials/header') %>
+
+<div class="container">
+	<div class="row">
+		<div class="col-md-6 mx-auto mt-5">
+			<div class="card p-2">
+				<div class="d-flex justify-content-between">
+					<h4 class="pt-3 pb-3">Fastest SMS Delivery</h4>
+					<h4 id="totalSMS" class="pt-3 pb-3"></h4>
+				</div>
+				<div class="msg"></div>
+				<form>
+					<div class="form-group">
+						<label for="numbers p-2">Copy and Paste from Excel file</label>
+						<textarea
+							class="form-control"
+							id="numbers"
+							cols="30"
+							rows="3"
+						></textarea>
+					</div>
+					<div class="form-group">
+						<label for="Body">Body</label>
+						<textarea
+							class="form-control"
+							id="body"
+							cols="30"
+							rows="3"
+						></textarea>
+					</div>
+					<button id="send" style="width: 100%" class="btn btn-secondary mt-2">
+						Send
+					</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	let totalNumbers = [];
+	document.getElementById("numbers").addEventListener("keyup", (e) => {
+		let numbers = String(e.target.value).trim();
+		let messages = numbers
+			.split("\n")
+			.map((e) => {
+				let num = String(e).split("")[0] == 1 ? `0${e}` : e;
+				return num;
+			})
+			.filter((x) => x.length === 11);
+
+		$("#totalSMS").text(`Total: ${messages.length}`);
+
+		totalNumbers = messages;
+	});
+
+	$("#send").click((e) => {
+		e.preventDefault();
+		let msg = document.querySelector(".msg");
+		let body = document.getElementById("body").value;
+		if (totalNumbers.length === 0) {
+			msg.innerHTML = `<div class="alert alert-danger">type valid numbers ?</div>`;
+		} else if (body === "") {
+			msg.innerHTML = `<div class="alert alert-danger">body ?</div>`;
+		} else {
+			let data = totalNumbers.map((e) => ({
+				number: e,
+				body,
+			}));
+			socket.emit("bulk", data);
+			socket.on("test", (val) => console.log(val));
+		}
+	});
+</script>

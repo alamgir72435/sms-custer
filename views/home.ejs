@@ -1,84 +1,108 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Send SMS</title>
-		<link
-			href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css"
-			rel="stylesheet"
-		/>
-	</head>
-	<body>
-		<div class="container">
-			<div class="row">
-				<div class="col-md-6 mx-auto mt-5">
-					<div class="card p-2">
-						<h4 class="text-center">Fastest SMS Delivery</h4>
-						<div class="msg"></div>
-						<form>
-							<div class="form-group">
-								<label for="phone">Phone</label>
-								<input value="01841801069" id="phone" class="form-control" />
-							</div>
-							<div class="form-group">
-								<label for="Body">Body</label>
-								<textarea
-									class="form-control"
-									id="body"
-									cols="30"
-									rows="3"
-								></textarea>
-							</div>
-							<button
-								id="send"
-								style="width: 100%"
-								class="btn btn-secondary mt-2"
-							>
-								Send
-							</button>
-						</form>
-					</div>
-				</div>
+<%- include('./partials/header') %>
+<div class="container">
+	<div class="row">
+		<div class="col-md-8 card p-3">
+			<div class="card-title">All Sms</div>
+			<table class="table table-bordered">
+				<thead>
+					<tr>
+						<th>SL</th>
+						<th>number</th>
+						<th>Body</th>
+						<th>Time</th>
+						<th>Status</th>
+					</tr>
+				</thead>
+				<tbody id="output"></tbody>
+			</table>
+			<div class="spinner-border text-center mx-auto" role="status">
+				<span class="visually-hidden">Loading...</span>
 			</div>
 		</div>
 
-		<script>
-			document.querySelector("#send").addEventListener("click", (e) => {
-				e.preventDefault();
-				let number = document.querySelector("#phone").value;
-				let body = document.querySelector("#body").value;
-				let msg = document.querySelector(".msg");
-				if (number === "") {
-					msg.innerHTML = `<div class="alert alert-danger">Phone ?</div>`;
-				} else if (body === "") {
-					msg.innerHTML = `<div class="alert alert-danger">body ?</div>`;
+		<div class="col-md-4 card p-3">
+			<div class="d-flex flex-row justify-content-between">
+				<div>
+					<img style="display: none" id="sending" src="./sending.gif" alt="" />
+				</div>
+				<button id="sync" class="btn btn-lg">
+					<i id="sync-memessage-icon" class="fas fa-sync"></i>
+				</button>
+			</div>
+			<hr />
+			<div class="card-title">Summery</div>
+			<h3>In Queue : <span id="in-queue"></span></h3>
+			<h3>Total Sent : <span id="totalSent"></span></h3>
+		</div>
+	</div>
+</div>
+
+<script>
+	async function LoadData() {
+		try {
+			const res = await fetch("/message/all").then((res) => res.json());
+			let output = document.getElementById("output");
+			let serial = 0;
+			let inQueue = Array.from(res).filter((x) => !x.status);
+			$("#in-queue").text(inQueue.length);
+			let sended = Array.from(res).filter((x) => x.status);
+			$("#totalSent").text(sended.length);
+			let messages = [...inQueue, ...sended];
+			// Hide Spinner
+			document.querySelector(".spinner-border").style.display = "none";
+			let rows = "";
+			for (let message of messages) {
+				serial++;
+				let status = "";
+				if (message.status) {
+					status = '<div class="badge bg-success">Sent</div>';
 				} else {
-					let data = {
-						number,
-						body,
-					};
-					e.target.textContent = "Sending";
-					fetch("/send", {
-						method: "POST",
-						mode: "cors",
-						cache: "no-cache",
-						credentials: "same-origin",
-						headers: {
-							"Content-Type": "application/json",
-						},
-						body: JSON.stringify(data),
-					})
-						.then((res) => {
-							msg.innerHTML = `<div class="alert alert-success">Message Sent</div>`;
-							e.target.textContent = "Send";
-						})
-						.catch((err) => {
-							e.target.textContent = "Send";
-						});
+					status = '<div class="badge bg-warning">in queue</div>';
 				}
+				rows += `
+				<tr>
+					<td>${serial}</td>
+					<td>${message.number}</td>
+					<td>${message.body}</td>
+					<td> please wait</td>
+					<td>
+						${status}
+					</td>
+				</tr>
+				`;
+			}
+			output.innerHTML = rows;
+			// Datatable
+			$(".table").DataTable({
+				retrieve: true,
+				destroy: true,
 			});
-		</script>
-	</body>
-</html>
+		} catch (error) {
+			console.log("Error Occured");
+		}
+	}
+	LoadData();
+
+	document.getElementById("sync").addEventListener("click", () => {
+		$("#sync-memessage-icon").addClass("fa-spin");
+		// sent request to smartphone to send queue message
+		socket.emit("sync", {});
+		setTimeout(() => {
+			LoadData();
+			$("#sync-memessage-icon").removeClass("fa-spin");
+		}, 8000);
+	});
+
+	function showSendingLight() {
+		$("#sending").show();
+		setTimeout(() => {
+			$("#sending").hide();
+		}, 10000);
+	}
+
+	// light on  of
+	socket.on("all", (data) => {
+		console.log("Sending Request ...");
+		showSendingLight();
+	});
+</script>

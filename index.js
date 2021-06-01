@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const Pusher = require("pusher");
 const cors = require("cors");
 const socketio = require("socket.io");
+const { v4 } = require("uuid");
 
 const port = process.env.PORT || 5000;
 const pusher = new Pusher({
@@ -17,10 +18,9 @@ const pusher = new Pusher({
 // middleware
 app.set("view engine", "ejs");
 app.use(express.json());
-app.get("/", (req, res) => {
-	res.render("home");
-});
+
 app.use(cors());
+app.use(express.static("public"));
 
 const uri =
 	"mongodb+srv://admin:admin@cluster0.pnvh0.mongodb.net/sms-custer?retryWrites=true&w=majority";
@@ -35,48 +35,46 @@ mongoose
 	.then((db) => {
 		console.log("Mongodb Connected");
 	});
-
-const messageSchema = mongoose.Schema({
-	number: {
-		type: String,
-		required: true,
+const messageSchema = mongoose.Schema(
+	{
+		number: {
+			type: String,
+			required: true,
+		},
+		body: {
+			type: String,
+			required: true,
+		},
+		status: {
+			type: Boolean,
+			default: false,
+		},
 	},
-	body: {
-		type: String,
-		required: true,
-	},
-	status: {
-		type: Boolean,
-		default: false,
-	},
-});
-
+	{
+		timestamps: true,
+	}
+);
 const Message = mongoose.model("sms", messageSchema);
 
-app.post("/send", async (req, res) => {
-	const { number, body } = req.body;
-	try {
-		if (!number || number === "") {
-			throw Error("Number is not valid");
-		}
-		if (!body || body === "") {
-			throw Error("Body is not valid");
-		}
-		await new Message({
-			number,
-			body,
-		}).save();
-		const payload = JSON.stringify({
-			id: String(Math.random()).split(".")[1],
-			body: body,
-			number: number,
-		});
-		pusher.trigger("sms-channel", "message", payload);
-		res.json({ status: true });
-	} catch (error) {
-		res.json({ status: false });
-	}
+// home page
+app.get("/", (req, res) => {
+	res.render("home");
 });
+
+app.get("/send", (req, res) => {
+	res.render("socket");
+});
+app.get("/bulk-send", (req, res) => {
+	res.render("bulk");
+});
+
+app.get("/report", (req, res) => {
+	res.render("report");
+});
+
+// app.post("/send", async (req, res) => {
+// 	const { number, body } = req.body;
+// });
 
 app.get("/messages", async (req, res) => {
 	const messages = await Message.findOne({ status: false });
@@ -101,18 +99,17 @@ app.get("/mark-as-sent/:id", async (req, res) => {
 
 //////////////////////////////===============================
 
-app.get("/socket", (req, res) => {
-	res.render("socket");
-});
-
 const server = app.listen(port, console.log("server running on port " + port));
 
 const io = socketio(server);
 var messages;
 
+let interval = 15000;
+let totalTime = 0;
+
 io.on("connection", (socket) => {
 	console.log("Connected", socket.id);
-	socket.emit("all", messages);
+	// socket.emit("all", messages);
 	socket.on("message", async (message) => {
 		const { number, body } = message;
 		const mst = await new Message({ number, body }).save();
@@ -120,4 +117,31 @@ io.on("connection", (socket) => {
 		socket.broadcast.emit("all", messages);
 		socket.emit("sender", messages);
 	});
+
+	socket.on("sync", () => {
+		console.log("Sync Request Received from ", socket.id);
+		socket.broadcast.emit("all", messages);
+	});
+
+	socket.on("bulk", async (data) => {
+		totalTime = (data.length - 1) * interval;
+		console.log("total Time :", totalTime, "interval: ", interval);
+		await Message.insertMany(data);
+		let sending = setInterval(() => {
+			console.log("Running... with :", totalTime);
+			if (totalTime >= 0) {
+				// per interval emit request
+				console.log("Emiting...");
+				// lets Attemt to emit event
+				socket.broadcast.emit("all", { id: v4() });
+
+				totalTime = totalTime - interval;
+			} else {
+				console.log("Stop Emiting ");
+				clearInterval(sending);
+			}
+		}, interval);
+	});
+	// send Bulk
+	// Per 10 second send Request
 });
