@@ -6,7 +6,7 @@ const cors = require('cors');
 const socketio = require('socket.io');
 const { v4 } = require('uuid');
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 6000;
 
 // middleware
 app.set('view engine', 'ejs');
@@ -16,39 +16,18 @@ app.use(cors());
 app.use(express.static('public'));
 
 const uri =
-	'mongodb+srv://admin:admin@cluster0.pnvh0.mongodb.net/sms-custer?retryWrites=true&w=majority';
+	'mongodb+srv://admin:admin@cluster0.elas7.mongodb.net/somity?retryWrites=true&w=majority';
 
-// mongoodb connection
-// mongoose
-// 	.connect(uri, {
-// 		useNewUrlParser: true,
-// 		useUnifiedTopology: true,
-// 		useFindAndModify: true,
-// 	})
-// 	.then((db) => {
-// 		console.log('Mongodb Connected');
-// 	});
-
-const messageSchema = mongoose.Schema(
-	{
-		number: {
-			type: String,
-			required: true,
-		},
-		body: {
-			type: String,
-			required: true,
-		},
-		status: {
-			type: Boolean,
-			default: false,
-		},
-	},
-	{
-		timestamps: true,
-	}
-);
-const Message = mongoose.model('sms', messageSchema);
+mongoose
+	.connect(uri, {
+		useNewUrlParser: true,
+		useUnifiedTopology: true,
+		useCreateIndex: true,
+	})
+	.then((db) => {
+		console.log('Connected ');
+	})
+	.catch('error to Connected DB');
 
 // home page
 app.get('/', (req, res) => {
@@ -71,8 +50,9 @@ app.get('/report', (req, res) => {
 // });
 
 app.get('/messages', async (req, res) => {
-	const messages = await Message.findOne({ status: false });
-	res.json(messages);
+	// const messages = await Message.findOne({ status: false });
+	// res.json(messages);
+	return res.json([]);
 });
 
 app.get('/message/all', async (req, res) => {
