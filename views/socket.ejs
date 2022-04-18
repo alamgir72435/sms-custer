@@ -30,30 +30,30 @@
 </div>
 
 <script>
-	document.getElementById("send").addEventListener("click", (e) => {
+	document.getElementById('send').addEventListener('click', (e) => {
 		e.preventDefault();
-		let number = document.querySelector("#phone").value;
-		let body = document.querySelector("#body").value;
-		let msg = document.querySelector(".msg");
-		if (number === "") {
+		let number = document.querySelector('#phone').value;
+		let body = document.querySelector('#body').value;
+		let msg = document.querySelector('.msg');
+		if (number === '') {
 			msg.innerHTML = `<div class="alert alert-danger">Phone ?</div>`;
-		} else if (body === "") {
+		} else if (body === '') {
 			msg.innerHTML = `<div class="alert alert-danger">body ?</div>`;
 		} else {
-			document.querySelector("#phone").value = "";
-			document.querySelector("#body").value = "";
-			socket.emit("message", {
+			document.querySelector('#phone').value = '';
+			document.querySelector('#body').value = '';
+			socket.emit('message', {
 				number,
 				body,
 			});
 		}
 	});
 
-	socket.on("all", (data) => {
-		console.log(data);
-	});
+	// socket.on('all', (data) => {
+	// 	console.log(data);
+	// });
 
-	socket.on("sender", (data) => {
-		console.log(data);
-	});
+	// socket.on('sender', (data) => {
+	// 	console.log(data);
+	// });
 </script>

@@ -1,6 +1,6 @@
 <%- include('./partials/header') %>
 <div class="container">
-	<div class="row">
+	<!-- <div class="row">
 		<div class="col-md-8 card p-3">
 			<div class="card-title">All Sms</div>
 			<table class="table table-bordered">
@@ -34,76 +34,97 @@
 			<h3>In Queue : <span id="in-queue"></span></h3>
 			<h3>Total Sent : <span id="totalSent"></span></h3>
 		</div>
+	</div> -->
+
+	<div class="row">
+		<div class="col-md-6 mx-auto">
+			<h1>Device List</h1>
+			<hr />
+			<span id="device-list"></span>
+		</div>
 	</div>
 </div>
 
 <script>
-	async function LoadData() {
-		try {
-			const res = await fetch("/message/all").then((res) => res.json());
-			let output = document.getElementById("output");
-			let serial = 0;
-			let inQueue = Array.from(res).filter((x) => !x.status);
-			$("#in-queue").text(inQueue.length);
-			let sended = Array.from(res).filter((x) => x.status);
-			$("#totalSent").text(sended.length);
-			let messages = [...inQueue, ...sended];
-			// Hide Spinner
-			document.querySelector(".spinner-border").style.display = "none";
-			let rows = "";
-			for (let message of messages) {
-				serial++;
-				let status = "";
-				if (message.status) {
-					status = '<div class="badge bg-success">Sent</div>';
-				} else {
-					status = '<div class="badge bg-warning">in queue</div>';
-				}
-				rows += `
-				<tr>
-					<td>${serial}</td>
-					<td>${message.number}</td>
-					<td>${message.body}</td>
-					<td> please wait</td>
-					<td>
-						${status}
-					</td>
-				</tr>
-				`;
-			}
-			output.innerHTML = rows;
-			// Datatable
-			$(".table").DataTable({
-				retrieve: true,
-				destroy: true,
-			});
-		} catch (error) {
-			console.log("Error Occured");
-		}
-	}
-	LoadData();
-
-	document.getElementById("sync").addEventListener("click", () => {
-		$("#sync-memessage-icon").addClass("fa-spin");
-		// sent request to smartphone to send queue message
-		socket.emit("sync", {});
-		setTimeout(() => {
-			LoadData();
-			$("#sync-memessage-icon").removeClass("fa-spin");
-		}, 8000);
-	});
-
-	function showSendingLight() {
-		$("#sending").show();
-		setTimeout(() => {
-			$("#sending").hide();
-			LoadData();
-		}, 10000);
-	}
-
 	// light on  of
-	socket.on("all", (data) => {
-		console.log("Sending Request ...");
-		showSendingLight();
+
+	socket.on('connect', () => {
+		console.log('Socket Connected');
 	});
+
+	socket.emit('browser-client-connected', {});
+
+	socket.on('connected-device', (list) => {
+		console.log(list);
+		let viewCOnnectedDevice = list.map(
+			(x, i) =>
+				`<h2>${i + 1} | ${x?.id} - ${x?.deviceName}} [status : ${
+					x?.status
+				}]</h2>`
+		);
+		document.getElementById('device-list').innerHTML = viewCOnnectedDevice;
+	});
+
+	// async function LoadData() {
+	// 	try {
+	// 		const res = await fetch("/message/all").then((res) => res.json());
+	// 		let output = document.getElementById("output");
+	// 		let serial = 0;
+	// 		let inQueue = Array.from(res).filter((x) => !x.status);
+	// 		$("#in-queue").text(inQueue.length);
+	// 		let sended = Array.from(res).filter((x) => x.status);
+	// 		$("#totalSent").text(sended.length);
+	// 		let messages = [...inQueue, ...sended];
+	// 		// Hide Spinner
+	// 		document.querySelector(".spinner-border").style.display = "none";
+	// 		let rows = "";
+	// 		for (let message of messages) {
+	// 			serial++;
+	// 			let status = "";
+	// 			if (message.status) {
+	// 				status = '<div class="badge bg-success">Sent</div>';
+	// 			} else {
+	// 				status = '<div class="badge bg-warning">in queue</div>';
+	// 			}
+	// 			rows += `
+	// 			<tr>
+	// 				<td>${serial}</td>
+	// 				<td>${message.number}</td>
+	// 				<td>${message.body}</td>
+	// 				<td> please wait</td>
+	// 				<td>
+	// 					${status}
+	// 				</td>
+	// 			</tr>
+	// 			`;
+	// 		}
+	// 		output.innerHTML = rows;
+	// 		// Datatable
+	// 		$(".table").DataTable({
+	// 			retrieve: true,
+	// 			destroy: true,
+	// 		});
+	// 	} catch (error) {
+	// 		console.log("Error Occured");
+	// 	}
+	// }
+	// LoadData();
+
+	// document.getElementById("sync").addEventListener("click", () => {
+	// 	$("#sync-memessage-icon").addClass("fa-spin");
+	// 	// sent request to smartphone to send queue message
+	// 	socket.emit("sync", {});
+	// 	setTimeout(() => {
+	// 		LoadData();
+	// 		$("#sync-memessage-icon").removeClass("fa-spin");
+	// 	}, 8000);
+	// });
+
+	// function showSendingLight() {
+	// 	$("#sending").show();
+	// 	setTimeout(() => {
+	// 		$("#sending").hide();
+	// 		LoadData();
+	// 	}, 10000);
+	// }
 </script>
