@@ -6,7 +6,7 @@ const cors = require('cors');
 const socketio = require('socket.io');
 const { v4 } = require('uuid');
 
-const port = process.env.PORT || 6000;
+const port = process.env.PORT || 5555;
 
 // middleware
 app.set('view engine', 'ejs');
@@ -119,6 +119,18 @@ io.on('connection', (socket) => {
 		console.log('sending sms', message);
 		// socket.('send-sms', messages);
 		socket.broadcast.emit('send-sms', message);
+	});
+
+	// On Message Successfully Send
+	socket.on('message-sent-report', (message) => {
+		console.log('Message sent Successfull');
+		socket.broadcast.emit('message-sent', message);
+	});
+
+	// Logs Are Here
+	socket.on('new-log', (log) => {
+		console.log('New Log Created');
+		socket.broadcast.emit('log', log);
 	});
 
 	// On Device Disconnect Remove Device
