@@ -133,12 +133,16 @@ io.on('connection', (socket) => {
 
 	// saved message to queue
 	socket.on('queued-message', (messages) => {
-		console.log(`Reaceived New Queue Request of ${messages.length} message`);
+		let log = `Reaceived Queue Request of ${messages.length} message`;
+		socket.broadcast.emit('log', log);
+		console.log(log);
 		for (let each of messages) {
 			const find = smsQueue.find((msg) => msg._id === each._id);
 			if (!find) {
 				smsQueue.unshift(each);
-				console.log('New Sms saved in Queue', each._id);
+				let newSmsFoundLog = `New Sms saved in Queue ${each._id} `;
+				console.log(newSmsFoundLog);
+				socket.broadcast.emit('log', newSmsFoundLog);
 			}
 		}
 
