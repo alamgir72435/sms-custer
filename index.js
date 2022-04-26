@@ -15,20 +15,6 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static('public'));
 
-const uri =
-	'mongodb+srv://admin:admin@cluster0.elas7.mongodb.net/somity?retryWrites=true&w=majority';
-
-mongoose
-	.connect(uri, {
-		useNewUrlParser: true,
-		useUnifiedTopology: true,
-		useCreateIndex: true,
-	})
-	.then((db) => {
-		console.log('Connected ');
-	})
-	.catch('error to Connected DB');
-
 // home page
 app.get('/', (req, res) => {
 	res.render('home');
