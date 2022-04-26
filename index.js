@@ -84,6 +84,8 @@ var messages;
 
 let deviceList = [];
 
+var smsQueue = [];
+
 io.on('connection', (socket) => {
 	console.log('Connected', socket.id);
 
@@ -113,12 +115,14 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('message', async (message) => {
-		const { number, body } = message;
-		// const mst = await new Message({ number, body }).save();
-		// messages = mst;
+		// const { number, body } = message;
 		console.log('sending sms', message);
-		// socket.('send-sms', messages);
-		socket.broadcast.emit('send-sms', message);
+		const find = smsQueue.find((msg) => msg._id === message._id);
+		if (!find) {
+			smsQueue.unshift(message);
+			// Send Message
+			sendSmsFromQueue();
+		}
 	});
 
 	// On Message Successfully Send
@@ -126,6 +130,29 @@ io.on('connection', (socket) => {
 		console.log('Message sent Successfull');
 		socket.broadcast.emit('message-sent', message);
 	});
+
+	// saved message to queue
+	socket.on('queued-message', (messages) => {
+		console.log(`Reaceived New Queue Request of ${messages.length} message`);
+		for (let each of messages) {
+			const find = smsQueue.find((msg) => msg._id === each._id);
+			if (!find) {
+				smsQueue.unshift(each);
+				console.log('New Sms saved in Queue', each._id);
+			}
+		}
+
+		// after Finished saved to Queue now Send Message from Queue
+		sendSmsFromQueue();
+	});
+
+	function sendSmsFromQueue() {
+		if (smsQueue.length > 0) {
+			let message = smsQueue.pop();
+			console.log('Sending Message ', message._id);
+			socket.broadcast.emit('send-sms', message);
+		}
+	}
 
 	// Logs Are Here
 	socket.on('new-log', (log) => {
