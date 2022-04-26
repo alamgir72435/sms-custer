@@ -22,6 +22,7 @@ app.get('/', (req, res) => {
 app.get('/custer/app', (req, res) => {
 	res.render('home');
 });
+//
 
 app.get('/send', (req, res) => {
 	res.render('socket');
@@ -33,7 +34,7 @@ app.get('/bulk-send', (req, res) => {
 app.get('/report', (req, res) => {
 	res.render('report');
 });
-
+//
 // app.post("/send", async (req, res) => {
 // 	const { number, body } = req.body;
 // });
