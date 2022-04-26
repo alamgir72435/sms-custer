@@ -40,6 +40,10 @@ app.get('/messages', async (req, res) => {
 	return res.json([]);
 });
 
+app.get('/', async (req, res) => {
+	return res.send('custer running ');
+});
+
 app.get('/message/all', async (req, res) => {
 	// const messages = await Message.find();
 	// res.json(messages);
