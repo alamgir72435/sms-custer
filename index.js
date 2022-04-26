@@ -1,10 +1,9 @@
 const express = require('express');
 const app = express();
-const mongoose = require('mongoose');
-const Pusher = require('pusher');
 const cors = require('cors');
 const socketio = require('socket.io');
 const { v4 } = require('uuid');
+//
 
 const port = process.env.PORT || 5555;
 
