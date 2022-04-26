@@ -19,6 +19,10 @@ app.get('/', (req, res) => {
 	res.render('home');
 });
 
+app.get('/custer/app', (req, res) => {
+	res.render('home');
+});
+
 app.get('/send', (req, res) => {
 	res.render('socket');
 });
